@@ -1,15 +1,12 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const passport = require("passport");
-const session = require("express-session");
 const cookieParser = require("cookie-parser");
-const connectDB = require("./config/db");
-const authRoutes = require("./routes/authRoutes");
 const proxyRoutes = require("./routes/proxyRoutes");
+const { fetchContractDetails } = require("./services/blockchainService");
+const { analyzeWithML } = require("./services/mlService");
 const http = require('http');
 const { Server } = require('socket.io');
-require("./config/passport");
 
 const app = express();
 const server = http.createServer(app);
@@ -17,7 +14,7 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -25,31 +22,14 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors({ 
-  origin: process.env.FRONTEND_URL, 
+  origin: process.env.FRONTEND_URL || "http://localhost:5173", 
   credentials: true 
 }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(
-  session({ 
-    secret: process.env.SESSION_SECRET, 
-    resave: false, 
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    }
-  })
-);
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Routes
 app.use('/proxy', proxyRoutes);
-app.use("/auth", authRoutes);
-
 
 // Socket.IO connection handler
 io.on('connection', (socket) => {
@@ -62,6 +42,16 @@ io.on('connection', (socket) => {
       socket.emit('progress', { message: 'Processing source code', progress: 50 });
       const mlAnalysis = await analyzeWithML(contractDetails.sourceCode);
       socket.emit('progress', { message: 'Finalizing analysis', progress: 80 });
+      
+      const results = {
+        status: 'success',
+        contractAddress,
+        contractName: contractDetails.contractName || 'Unknown',
+        hasSourceCode: !!contractDetails.sourceCode,
+        riskScore: contractDetails.riskScore,
+        mlAnalysis
+      };
+      
       socket.emit('progress', { message: 'Analysis complete', progress: 100 });
       socket.emit('analysisComplete', results);
     } catch (error) {
@@ -84,11 +74,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Database Connection & Server Start
-connectDB().then(() => {
-  const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}).catch(err => {
-  console.error('Database connection failed:', err);
-  process.exit(1);
-});
+// Server Start
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
