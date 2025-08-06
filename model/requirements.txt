@@ -1,11 +1,11 @@
 numpy
 pandas
-virtualenv
-transformers
-tensorflow
 scikit-learn
 torch
-streamflow
+streamlit
+uvicorn
 requests
-flask
 fastapi
+transformers
+google-generativeai
+python-dotenv
