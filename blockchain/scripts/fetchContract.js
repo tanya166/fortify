@@ -7,16 +7,14 @@ const path = require("path");
 const INFURA_RPC_URL = process.env.INFURA_RPC_URL;
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
-// Hardcoded contract address
 const CONTRACT_ADDRESS = "0x4E95B942633b77372fFeafDf9A8105C23B17D91B";
 
-// Predefined name for the Solidity file
 const PREDEFINED_CONTRACT_NAME = "FetchedContract.sol";
 
 async function fetchContractDetails(contractAddress) {
     try {
         const provider = new ethers.JsonRpcProvider(INFURA_RPC_URL);
-        await provider.ready; // Wait for provider to be ready
+        await provider.ready; 
         console.log("Connected to network:", (await provider.getNetwork()).name);
 
         const bytecode = await provider.getCode(contractAddress);
@@ -46,7 +44,6 @@ async function fetchContractDetails(contractAddress) {
     }
 }
 
-// Function to extract just the Solidity code content from the response
 function extractSolidityCode(sourceCode) {
     if (!sourceCode) return null;
     
@@ -80,18 +77,15 @@ function extractSolidityCode(sourceCode) {
     }
 }
 
-// Function to save only Solidity code with a predefined name
 async function saveSolidityCode(details) {
     if (!details || !details.rawSourceCode) return;
     
     const outputDir = path.join(__dirname, '../contracts/fetched');
     
-    // Create directory if it doesn't exist
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
-    
-    // Extract and save Solidity code with predefined name
+
     const solidityCode = extractSolidityCode(details.rawSourceCode);
     if (solidityCode) {
         const sourceFile = path.join(outputDir, PREDEFINED_CONTRACT_NAME);
@@ -100,7 +94,6 @@ async function saveSolidityCode(details) {
     }
 }
 
-// Use the hardcoded address instead of command line argument
 console.log(`Fetching contract details for: ${CONTRACT_ADDRESS}`);
 
 fetchContractDetails(CONTRACT_ADDRESS)
@@ -113,5 +106,5 @@ fetchContractDetails(CONTRACT_ADDRESS)
     })
     .catch(console.error);
 
-// Export the functions for use in other modules
+
 module.exports = { fetchContractDetails, saveSolidityCode };

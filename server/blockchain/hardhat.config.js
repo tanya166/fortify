@@ -1,6 +1,6 @@
-require("@nomicfoundation/hardhat-verify");
-require("@nomicfoundation/hardhat-ethers");
-require("dotenv").config();
+require("@nomicfoundation/hardhat-toolbox");
+
+require("dotenv").config({ path: '../../.env' });
 
 module.exports = {
   networks: {

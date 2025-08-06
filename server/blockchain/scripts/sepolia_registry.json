@@ -1,0 +1,11 @@
+[
+  {
+    "originalContract": "0xbE2c4bD09593fD057CF24a4e54AF354822F8550e",
+    "proxyContract": "0x104122BAf1f115Bf5aB24B7B35Bb882180A44Efe",
+    "network": "sepolia",
+    "chainId": 11155111,
+    "deploymentTx": "0x0eb5481f83df3bf54b2b0c85fcf6f2a1985161dac0188116cb33ec975ce1fdc0",
+    "timestamp": "2025-07-26T22:04:36.581Z",
+    "status": "DEPLOYED_TO_SEPOLIA"
+  }
+]

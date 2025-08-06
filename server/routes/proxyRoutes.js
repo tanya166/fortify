@@ -15,21 +15,14 @@ router.post('/contract', async (req, res) => {
                 message: 'Invalid Ethereum address provided'
             });
         }
-
-        // Create a WebSocket or SSE connection for real-time updates
-        // For this example, we'll simulate progress updates
         const sendProgress = (message, progress) => {
             if (req.websocket) {
-                // WebSocket implementation
+
                 req.websocket.send(JSON.stringify({ message, progress }));
             } else {
-                // For HTTP, we could use Server-Sent Events (SSE)
-                // This is a simplified version
                 res.write(`data: ${JSON.stringify({ message, progress })}\n\n`);
             }
         };
-
-        // Step 1: Fetch contract details
         sendProgress('Fetching contract details from blockchain...', 20);
         const contractDetails = await fetchContractDetails(contractAddress);
         
