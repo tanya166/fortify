@@ -132,3 +132,4 @@ fetchContractDetails(CONTRACT_ADDRESS)
 
 
 module.exports = { fetchContractDetails, saveSolidityCode };
+
