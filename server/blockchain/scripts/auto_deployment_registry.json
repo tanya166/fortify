@@ -10,5 +10,17 @@
     "network": "sepolia",
     "timestamp": "2025-09-14T13:29:13.914Z",
     "status": "AUTO_DEPLOYED"
+  },
+  {
+    "originalContract": "0xC226600554c4603133fD90d694Eb449d9e203B8c",
+    "proxyContract": "0xFc925DF02F7b23e014b6A460cFF2f828067bA7Df",
+    "riskScore": 64,
+    "threshold": "60",
+    "mlAnalysis": {
+      "vulnerabilities": 2
+    },
+    "network": "sepolia",
+    "timestamp": "2025-09-14T18:29:34.752Z",
+    "status": "AUTO_DEPLOYED"
   }
 ]
