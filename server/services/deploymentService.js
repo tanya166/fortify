@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-
+const { ethers } = require('ethers');
 // Try multiple paths to find .env file
 const envPaths = [
     path.resolve(__dirname, '../../.env'),      // Most likely location
@@ -45,8 +45,6 @@ if (!envFound) {
 console.log('🧪 Testing environment variables after loading:');
 console.log(`   INFURA_RPC_URL: ${process.env.INFURA_RPC_URL ? '✅ Found' : '❌ Not found'}`);
 console.log(`   PRIVATE_KEY: ${process.env.PRIVATE_KEY ? '✅ Found' : '❌ Not found'}`);
-
-const { ethers } = require('ethers');
 
 class DeploymentService {
     constructor() {

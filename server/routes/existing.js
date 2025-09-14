@@ -1,9 +1,9 @@
 // server/routes/deployRoutes.js
 const express = require('express');
 const router = express.Router();
-const { assessAndProtectContract, RISK_THRESHOLD } = require('../services/riskAssessmentService');
-const { fetchContractDetails, extractSolidityCode } = require('../fetchContract');
-const securityAnalysisService = require('../services/SecurityAnalysisService');
+const { assessAndProtectContract, RISK_THRESHOLD } = require('../services/riskAssessmentExisting');
+const { fetchContractDetails, extractSolidityCode } = require("../services/blockchainService");
+const securityAnalysisService = require('../services/securityAnalysisService');
 
 // POST /api/deploy/analyze-and-deploy - Complete automated flow
 router.post('/analyze-and-deploy', async (req, res) => {
@@ -18,8 +18,6 @@ router.post('/analyze-and-deploy', async (req, res) => {
         }
 
         console.log(`🚀 Starting complete analysis and deployment flow for: ${contractAddress}`);
-
-        // STEP 1: Fetch contract details using fetchContract.js
         console.log("📥 STEP 1: Fetching contract from blockchain...");
         const contractDetails = await fetchContractDetails(contractAddress);
 

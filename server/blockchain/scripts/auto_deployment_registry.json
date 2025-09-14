@@ -1,0 +1,14 @@
+[
+  {
+    "originalContract": "0xC226600554c4603133fD90d694Eb449d9e203B8c",
+    "proxyContract": "0xc16fA18537EB37033e04ce1d9761a35b594dbecd",
+    "riskScore": 64,
+    "threshold": "60",
+    "mlAnalysis": {
+      "vulnerabilities": 2
+    },
+    "network": "sepolia",
+    "timestamp": "2025-09-14T13:29:13.914Z",
+    "status": "AUTO_DEPLOYED"
+  }
+]
