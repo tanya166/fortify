@@ -8,7 +8,6 @@ const INFURA_RPC_URL = process.env.INFURA_RPC_URL;
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
 const CONTRACT_ADDRESS = "0x4E95B942633b77372fFeafDf9A8105C23B17D91B";
-
 const PREDEFINED_CONTRACT_NAME = "FetchedContract.sol";
 
 async function fetchContractDetails(contractAddress) {
