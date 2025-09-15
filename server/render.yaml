@@ -2,8 +2,10 @@ services:
   - type: web
     name: smart-contract-security-backend
     runtime: node
-    plan: starter  # or free
-    buildCommand: npm install
+    plan: starter
+    buildCommand: |
+      npm install
+      pip install slither-analyzer
     startCommand: npm start
     healthCheckPath: /health
     envVars:
@@ -12,16 +14,12 @@ services:
       - key: PORT
         value: 3000
       - key: FRONTEND_URL
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: INFURA_RPC_URL
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: PRIVATE_KEY
-        sync: false  # Set this manually in Render dashboard  
+        sync: false
       - key: ETHERSCAN_API_KEY
-        sync: false  # Set this manually in Render dashboard
+        sync: false
       - key: RISK_THRESHOLD
         value: 7.0
-    # Optional: Set up auto-deploy from GitHub
-    # repo: https://github.com/your-username/your-repo
-    # branch: main
-    # rootDir: server  # if your server code is in a subdirectory
