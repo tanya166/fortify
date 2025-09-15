@@ -12,12 +12,15 @@ const SolidityIDE = () => {
     const [deploymentAllowed, setDeploymentAllowed] = useState(false);
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
- const getApiUrl = () => {
-    if (import.meta.env.PROD) {
-        return import.meta.env.VITE_API_URL || 'https://fortify-qwmj.onrender.com';
-    }
-    return 'http://localhost:3000';
-};
+
+    // FIXED: Consistent API URL function (same as ContractFetcher)
+    const getApiUrl = () => {
+        if (import.meta.env.PROD) {
+            return import.meta.env.VITE_API_URL || 'https://fortify-qwmj.onrender.com';
+        }
+        return 'http://localhost:3000';
+    };
+
     const updateLineNumbers = () => {
         const lines = code.split('\n').length;
         const lineNumbers = [];
