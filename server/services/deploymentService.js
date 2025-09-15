@@ -9,8 +9,6 @@ const envPaths = [
     path.resolve(__dirname, '../../../../.env'), // Just in case
 ];
 
-console.log('🔍 Searching for .env file from deploymentService.js...');
-console.log(`📁 Current file location: ${__dirname}`);
 
 let envFound = false;
 for (const envPath of envPaths) {
@@ -24,27 +22,6 @@ for (const envPath of envPaths) {
         console.log(`   ❌ Not found`);
     }
 }
-
-if (!envFound) {
-    console.log('❌ No .env file found in any expected location');
-    console.log('📁 Please make sure your .env file is in one of these locations:');
-    envPaths.forEach(p => console.log(`   - ${p}`));
-    
-    // Try to show what files ARE in the expected directory
-    try {
-        const expectedDir = path.resolve(__dirname, '../../');
-        console.log(`📁 Files in expected directory (${expectedDir}):`);
-        const files = fs.readdirSync(expectedDir);
-        files.forEach(file => console.log(`   - ${file}`));
-    } catch (err) {
-        console.log(`   Could not list files: ${err.message}`);
-    }
-}
-
-// Now test if environment variables are loaded
-console.log('🧪 Testing environment variables after loading:');
-console.log(`   INFURA_RPC_URL: ${process.env.INFURA_RPC_URL ? '✅ Found' : '❌ Not found'}`);
-console.log(`   PRIVATE_KEY: ${process.env.PRIVATE_KEY ? '✅ Found' : '❌ Not found'}`);
 
 class DeploymentService {
     constructor() {

@@ -9,21 +9,6 @@ const envPaths = [
     path.resolve(process.cwd(), '.env'),         // Current working directory
 ];
 
-console.log('🔍 blockchainService: Searching for .env file...');
-let envFound = false;
-for (const envPath of envPaths) {
-    if (fs.existsSync(envPath)) {
-        console.log(`✅ Found .env file at: ${envPath}`);
-        require('dotenv').config({ path: envPath });
-        envFound = true;
-        break;
-    }
-}
-
-if (!envFound) {
-    console.log('❌ blockchainService: No .env file found');
-    throw new Error('Environment file (.env) not found');
-}
 
 if (!process.env.INFURA_RPC_URL) {
     throw new Error('INFURA_RPC_URL is required but not found in environment variables');

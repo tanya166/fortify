@@ -33,18 +33,14 @@ const corsOptions = {
             'http://localhost:3000',
             'https://localhost:5173',
             process.env.FRONTEND_URL,
-            // Add your Vercel domain here
-            'https://your-app.vercel.app',
-            // Allow any vercel.app subdomain in production
+            'fortify-16.vercel.app',
             /\.vercel\.app$/
         ].filter(Boolean);
 
-        // In development, allow any localhost
         if (isDevelopment && origin.includes('localhost')) {
             return callback(null, true);
         }
 
-        // Check against allowed origins
         const isAllowed = allowedOrigins.some(allowed => {
             if (allowed instanceof RegExp) {
                 return allowed.test(origin);
@@ -72,10 +68,8 @@ const io = new Server(server, {
     allowEIO3: true,
     pingTimeout: 60000,
     pingInterval: 25000,
-    // Render-specific configurations
     path: '/socket.io/',
     serveClient: false,
-    // Allow polling fallback for better compatibility
     transports: isProduction ? ['websocket', 'polling'] : ['websocket', 'polling']
 });
 

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require("dotenv").config({ path: '../../../.env' });
 const securityAnalysisService = require('../../services/securityAnalysisService');
 const compilationService = require('../../services/compilationService');
 const deploymentService = require('../../services/deploymentService');
