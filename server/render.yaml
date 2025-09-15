@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: smart-contract-security-backend
+    runtime: node
+    plan: starter  # or free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: FRONTEND_URL
+        sync: false  # Set this manually in Render dashboard
+      - key: INFURA_RPC_URL
+        sync: false  # Set this manually in Render dashboard
+      - key: PRIVATE_KEY
+        sync: false  # Set this manually in Render dashboard  
+      - key: ETHERSCAN_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: RISK_THRESHOLD
+        value: 7.0
+    # Optional: Set up auto-deploy from GitHub
+    # repo: https://github.com/your-username/your-repo
+    # branch: main
+    # rootDir: server  # if your server code is in a subdirectory

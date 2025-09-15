@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,8 +25,6 @@ const ContractFetcher = () => {
         }
         return lineNumbers;
     };
-
-    // Risk Check Only (no deployment)
     const checkRiskOnly = async () => {
         if (!contractAddress) {
             toast.error("Please enter a contract address!");
@@ -38,9 +37,14 @@ const ContractFetcher = () => {
         setInterpretation("Loading...");
         setAnalysisResult(null);
         setProtectionResult(null);
-
+ const getApiUrl = () => {
+        if (process.env.NODE_ENV === 'production') {
+            return process.env.REACT_APP_API_URL || 'https://your-render-app.onrender.com';
+        }
+        return 'http://localhost:3000';
+    };
         try {
-            const response = await fetch("http://localhost:3000/api/risk/check-only", {
+            const response = await fetch("await fetch(`${getApiUrl()}/api/risk/check-only", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ contractAddress }),
@@ -93,9 +97,9 @@ const ContractFetcher = () => {
         setProtectionResult(null);
 
         try {
-            const response = await fetch("http://localhost:3000/api/risk/analyze-and-deploy", {
+            const response = await fetch(API_ENDPOINTS.RISK_ANALYZE_AND_DEPLOY, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                ...API_CONFIG,
                 body: JSON.stringify({ contractAddress }),
             });
 

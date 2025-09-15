@@ -13,6 +13,14 @@ const SolidityIDE = () => {
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
 
+    // Get API URL based on environment
+    const getApiUrl = () => {
+        if (process.env.NODE_ENV === 'production') {
+            return process.env.REACT_APP_API_URL || 'https://your-render-app.onrender.com';
+        }
+        return 'http://localhost:3000';
+    };
+
     // Function to update line numbers
     const updateLineNumbers = () => {
         const lines = code.split('\n').length;
@@ -36,7 +44,8 @@ const SolidityIDE = () => {
         setDeploymentAllowed(false);
     
         try {
-            const response = await fetch('http://localhost:3000/api/deploy/check-only', {
+            const apiUrl = getApiUrl();
+            const response = await fetch(`${apiUrl}/api/deploy/check-only`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -102,7 +111,7 @@ ${data.recommendations ? data.recommendations.join('\n- ') : 'No specific recomm
             }
         } catch (error) {
             const errorMsg = error.message.includes('Failed to fetch') 
-                ? 'Failed to connect to backend. Please ensure the server is running at http://localhost:3000'
+                ? 'Failed to connect to backend. Please check your connection and try again.'
                 : `Analysis error: ${error.message}`;
             
             setOutput(errorMsg);
@@ -123,7 +132,8 @@ ${data.recommendations ? data.recommendations.join('\n- ') : 'No specific recomm
         setOutput("Starting deployment pipeline...\n1. Security Analysis...");
 
         try {
-            const response = await fetch('http://localhost:3000/api/deploy/analyze-and-deploy', {
+            const apiUrl = getApiUrl();
+            const response = await fetch(`${apiUrl}/api/deploy/analyze-and-deploy`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -196,7 +206,7 @@ Your contract is now live on ${data.deployment.networkName || 'Sepolia'} testnet
             }
         } catch (error) {
             const errorMsg = error.message.includes('Failed to fetch') 
-                ? 'Failed to connect to backend. Please ensure the server is running at http://localhost:3000'
+                ? 'Failed to connect to backend. Please check your connection and try again.'
                 : `Deployment error: ${error.message}`;
             
             setOutput(errorMsg);

@@ -16,43 +16,122 @@ const existingContractRoutes = require('./routes/existing');   // Existing contr
 const app = express();
 const server = http.createServer(app);
 
-// Environment validation
-const envPath = path.join(__dirname, '../.env');
-console.log(`🔍 Looking for .env file at: ${envPath}`);
+// Environment configuration for production
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = process.env.NODE_ENV === 'production';
 
-if (fs.existsSync(envPath)) {
-    require('dotenv').config({ path: envPath });
-    console.log('✅ Environment variables loaded successfully');
-    console.log(`   INFURA_RPC_URL: ${process.env.INFURA_RPC_URL ? 'Found' : 'Not found'}`);
-    console.log(`   PRIVATE_KEY: ${process.env.PRIVATE_KEY ? 'Found' : 'Not found'}`);
-    console.log(`   ETHERSCAN_API_KEY: ${process.env.ETHERSCAN_API_KEY ? 'Found' : 'Not found'}`);
-} else {
-    console.log('❌ .env file not found at expected location');
-    console.log('📁 Current directory:', __dirname);
-    console.log('📁 Looking for .env at:', envPath);
-}
+console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 
-// Socket.IO setup with enhanced configuration
-const io = new Server(server, {
-    cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:5173",
-        methods: ["GET", "POST"],
-        credentials: true
+// Production-ready CORS configuration
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'https://localhost:5173',
+            process.env.FRONTEND_URL,
+            // Add your Vercel domain here
+            'https://your-app.vercel.app',
+            // Allow any vercel.app subdomain in production
+            /\.vercel\.app$/
+        ].filter(Boolean);
+
+        // In development, allow any localhost
+        if (isDevelopment && origin.includes('localhost')) {
+            return callback(null, true);
+        }
+
+        // Check against allowed origins
+        const isAllowed = allowedOrigins.some(allowed => {
+            if (allowed instanceof RegExp) {
+                return allowed.test(origin);
+            }
+            return allowed === origin;
+        });
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.warn(`❌ CORS blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
     },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 200
+};
+
+// Socket.IO setup with enhanced configuration for production
+const io = new Server(server, {
+    cors: corsOptions,
     transports: ['websocket', 'polling'],
-    allowEIO3: true
+    allowEIO3: true,
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    // Render-specific configurations
+    path: '/socket.io/',
+    serveClient: false,
+    // Allow polling fallback for better compatibility
+    transports: isProduction ? ['websocket', 'polling'] : ['websocket', 'polling']
 });
 
-// Middleware
-app.use(helmet());
-app.use(cors({ 
-    origin: process.env.FRONTEND_URL || "http://localhost:5173", 
-    credentials: true 
+// Enhanced middleware for production
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'", "wss:", "ws:"]
+        }
+    },
+    crossOriginEmbedderPolicy: false
 }));
-app.use(morgan('combined'));
+
+app.use(cors(corsOptions));
+
+// Enhanced logging for production
+if (isProduction) {
+    app.use(morgan('combined'));
+} else {
+    app.use(morgan('dev'));
+}
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Health check for Render
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+        deployment: 'render',
+        services: {
+            deployment: 'Available',
+            blockchain: process.env.INFURA_RPC_URL ? 'Connected' : 'Not configured',
+            websocket: 'Active',
+            securityAnalysis: 'Available'
+        },
+        features: {
+            newContracts: "Analyze, compile and deploy new smart contracts",
+            existingContracts: "Assess risk and deploy security proxies for existing contracts",
+            realTimeUpdates: "WebSocket support for live progress tracking"
+        }
+    });
+});
+
+// Add a simple ping endpoint for monitoring
+app.get('/ping', (req, res) => {
+    res.json({ pong: true, timestamp: Date.now() });
+});
 
 // Routes
 app.use('/api/deploy', deployRoutes);           // New contract endpoints
@@ -241,56 +320,17 @@ io.on('connection', (socket) => {
     });
 });
 
-// Enhanced health check endpoint
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development',
-        services: {
-            deployment: 'Available',
-            blockchain: process.env.INFURA_RPC_URL ? 'Connected' : 'Not configured',
-            websocket: 'Active',
-            securityAnalysis: 'Available'
-        },
-        features: {
-            newContracts: "Analyze, compile and deploy new smart contracts",
-            existingContracts: "Assess risk and deploy security proxies for existing contracts",
-            realTimeUpdates: "WebSocket support for live progress tracking"
-        },
-        endpoints: {
-            newContracts: [
-                "POST /api/deploy/analyze-and-deploy",
-                "POST /api/deploy/check-only", 
-                "POST /api/deploy/force-deploy"
-            ],
-            existingContracts: [
-                "POST /api/risk/analyze-and-deploy",
-                "POST /api/risk/check-only"
-            ],
-            legacy: [
-                "POST /fetch-contract",
-                "GET /health"
-            ]
-        },
-        websocket: {
-            endpoint: '/socket.io',
-            events: {
-                'analyzeContractRealtime': 'Real-time new contract analysis',
-                'analyzeExistingContract': 'Real-time existing contract analysis',
-                'deployContract': 'Real-time contract deployment'
-            }
-        }
-    });
-});
-
 // Root endpoint with comprehensive documentation
 app.get('/', (req, res) => {
     res.json({
         name: 'Smart Contract Security & Deployment Platform',
         version: '2.0.0',
         description: 'Complete platform with real-time updates for smart contract security analysis and deployment',
+        deployment: {
+            frontend: 'Vercel',
+            backend: 'Render',
+            environment: process.env.NODE_ENV || 'development'
+        },
         features: {
             newContracts: {
                 description: 'Upload, analyze, and deploy new smart contracts',
@@ -315,14 +355,15 @@ app.get('/', (req, res) => {
                 'POST /api/risk/analyze-and-deploy': 'Complete protection pipeline',
                 'POST /api/risk/check-only': 'Risk assessment only'
             },
-            legacy: {
+            utility: {
                 'POST /fetch-contract': 'Legacy contract analysis',
                 'GET /health': 'System health check',
+                'GET /ping': 'Simple ping endpoint',
                 'GET /': 'This documentation'
             }
         },
         websocket: {
-            url: `ws://localhost:${process.env.PORT || 3000}/socket.io`,
+            url: isProduction ? 'wss://your-render-app.onrender.com/socket.io' : `ws://localhost:${process.env.PORT || 3000}/socket.io`,
             events: {
                 client_to_server: [
                     'analyzeContractRealtime',
@@ -345,15 +386,24 @@ app.get('/', (req, res) => {
     });
 });
 
-// Error handling middleware
+// Error handling middleware - enhanced for production
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
-    res.status(500).json({
+    
+    // Don't leak error details in production
+    const error = {
         success: false,
         error: 'Internal server error',
-        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+        message: isDevelopment ? err.message : 'Something went wrong',
         timestamp: new Date().toISOString()
-    });
+    };
+
+    // Add stack trace only in development
+    if (isDevelopment && err.stack) {
+        error.stack = err.stack;
+    }
+
+    res.status(500).json(error);
 });
 
 // 404 handler
@@ -365,31 +415,56 @@ app.use((req, res) => {
         availableEndpoints: {
             newContracts: ['POST /api/deploy/*'],
             existingContracts: ['POST /api/risk/*'],
-            utility: ['GET /health', 'GET /']
+            utility: ['GET /health', 'GET /ping', 'GET /']
         }
     });
 });
 
+// Graceful shutdown for production
+const gracefulShutdown = (signal) => {
+    console.log(`\n🛑 ${signal} signal received: closing HTTP server`);
+    server.close(() => {
+        console.log('✅ HTTP server closed');
+        
+        // Close database connections, cleanup, etc.
+        process.exit(0);
+    });
+    
+    // Force close after 10 seconds
+    setTimeout(() => {
+        console.log('❌ Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+    }, 10000);
+};
+
+// Handle various termination signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // In production, you might want to shut down gracefully
+    if (isProduction) {
+        gracefulShutdown('unhandledRejection');
+    }
 });
 
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    process.exit(1);
+    gracefulShutdown('uncaughtException');
 });
 
 // Server Start
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log('🚀 Smart Contract Security & Deployment Platform v2.0');
     console.log('═'.repeat(70));
-    console.log(`🌐 Server: http://localhost:${PORT}`);
-    console.log(`🔗 Frontend: ${process.env.FRONTEND_URL || "http://localhost:5173"}`);
-    console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📚 API Docs: http://localhost:${PORT}/`);
-    console.log(`💚 Health: http://localhost:${PORT}/health`);
+    console.log(`🌐 Server: http://0.0.0.0:${PORT}`);
+    console.log(`🔗 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🏠 Frontend: ${process.env.FRONTEND_URL || "http://localhost:5173"}`);
+    console.log(`📚 API Docs: http://0.0.0.0:${PORT}/`);
+    console.log(`💚 Health: http://0.0.0.0:${PORT}/health`);
     console.log('═'.repeat(70));
     
     console.log('\n🆕 NEW CONTRACTS:');
@@ -402,13 +477,18 @@ server.listen(PORT, () => {
     console.log(`   📊 POST /api/risk/check-only            - Risk assessment only`);
     
     console.log('\n📡 REAL-TIME FEATURES:');
-    console.log(`   🔌 WebSocket: ws://localhost:${PORT}/socket.io`);
+    const wsProtocol = isProduction ? 'wss' : 'ws';
+    const wsHost = isProduction ? process.env.RENDER_EXTERNAL_URL || `https://your-render-app.onrender.com` : `localhost:${PORT}`;
+    console.log(`   🔌 WebSocket: ${wsProtocol}://${wsHost}/socket.io`);
     console.log(`   📈 Live progress updates for all operations`);
     console.log(`   🔄 Real-time security analysis feedback`);
     
     // Environment validation
     console.log('\n⚙️  CONFIGURATION STATUS:');
     const configs = [
+        ['NODE_ENV', process.env.NODE_ENV],
+        ['PORT', PORT],
+        ['FRONTEND_URL', process.env.FRONTEND_URL],
         ['INFURA_RPC_URL', process.env.INFURA_RPC_URL],
         ['PRIVATE_KEY', process.env.PRIVATE_KEY], 
         ['ETHERSCAN_API_KEY', process.env.ETHERSCAN_API_KEY],
@@ -416,16 +496,18 @@ server.listen(PORT, () => {
     ];
     
     configs.forEach(([key, value]) => {
-        console.log(`   ${value ? '✅' : '❌'} ${key}: ${value ? 'Configured' : 'Missing'}`);
+        const hasValue = value && value.toString().length > 0;
+        console.log(`   ${hasValue ? '✅' : '❌'} ${key}: ${hasValue ? 'Configured' : 'Missing'}`);
     });
     
     if (!process.env.INFURA_RPC_URL || !process.env.PRIVATE_KEY) {
         console.log('\n⚠️  WARNING: Missing required environment variables!');
-        console.log('   Create a .env file with:');
+        console.log('   Required for Render deployment:');
         console.log('   INFURA_RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID');
         console.log('   PRIVATE_KEY=your_private_key_here');
         console.log('   ETHERSCAN_API_KEY=your_etherscan_api_key');
+        console.log('   FRONTEND_URL=https://your-app.vercel.app');
     }
     
-    console.log('\n🎉 Platform ready! Real-time smart contract security at your service! 🔐');
+    console.log(`\n🎉 Platform ready on ${isProduction ? 'Render' : 'localhost'}! Real-time smart contract security at your service! 🔐`);
 });
