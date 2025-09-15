@@ -14,14 +14,13 @@
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.13",
-    "cors": "^2.8.5",
-    "ethers": "^6.13.5",
     "hardhat": "^2.26.3",
-    "helmet": "^7.0.0",
-    "morgan": "^1.10.0",
-    "solc": "^0.8.21"
+    "morgan": "^1.10.0"
   },
   "dependencies": {
+     "helmet": "^7.0.0",
+     "solc": "^0.8.21",
+      "ethers": "^6.13.5",
     "@openzeppelin/contracts": "^5.4.0",
     "axios": "^1.8.4",
     "cookie-parser": "^1.4.7",
