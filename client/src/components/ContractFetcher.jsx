@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -15,6 +14,14 @@ const ContractFetcher = () => {
     const [protectionResult, setProtectionResult] = useState(null);
     const lineNumbersRef = useRef(null);
 
+    // MOVED OUTSIDE - Make getApiUrl available to all functions
+    const getApiUrl = () => {
+        if (import.meta.env.PROD) {
+            return import.meta.env.VITE_API_URL || 'https://fortify-qwmj.onrender.com';
+        }
+        return 'http://localhost:3000';
+    };
+
     const updateLineNumbers = () => {
         if (!solidityCode) return null;
     
@@ -25,6 +32,7 @@ const ContractFetcher = () => {
         }
         return lineNumbers;
     };
+
     const checkRiskOnly = async () => {
         if (!contractAddress) {
             toast.error("Please enter a contract address!");
@@ -37,14 +45,9 @@ const ContractFetcher = () => {
         setInterpretation("Loading...");
         setAnalysisResult(null);
         setProtectionResult(null);
-        const getApiUrl = () => {
-    if (import.meta.env.PROD) {
-        return import.meta.env.VITE_API_URL || 'https://fortify-qwmj.onrender.com';
-    }
-    return 'http://localhost:3000';
-};
+
         try {
-            const response = await fetch("await fetch(`${getApiUrl()}/api/risk/check-only", {
+            const response = await fetch(`${getApiUrl()}/api/risk/check-only`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ contractAddress }),
@@ -73,7 +76,7 @@ const ContractFetcher = () => {
             }
         } catch (error) {
             console.error("Error:", error);
-            toast.error("Network error - ensure backend is running at localhost:3000");
+            toast.error("Network error - ensure backend is running");
             setSolidityCode("Network error");
             setRiskScore("Error");
             setInterpretation("Error");
@@ -97,9 +100,10 @@ const ContractFetcher = () => {
         setProtectionResult(null);
 
         try {
-            const response = await fetch(API_ENDPOINTS.RISK_ANALYZE_AND_DEPLOY, {
+            // FIXED: Removed undefined API_CONFIG
+            const response = await fetch(`${getApiUrl()}/api/risk/analyze-and-deploy`, {
                 method: "POST",
-                ...API_CONFIG,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ contractAddress }),
             });
 
