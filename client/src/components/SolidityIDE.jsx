@@ -12,16 +12,12 @@ const SolidityIDE = () => {
     const [deploymentAllowed, setDeploymentAllowed] = useState(false);
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
-
-    // Get API URL based on environment
     const getApiUrl = () => {
         if (process.env.NODE_ENV === 'production') {
             return process.env.REACT_APP_API_URL || 'https://your-render-app.onrender.com';
         }
         return 'http://localhost:3000';
     };
-
-    // Function to update line numbers
     const updateLineNumbers = () => {
         const lines = code.split('\n').length;
         const lineNumbers = [];
@@ -31,7 +27,6 @@ const SolidityIDE = () => {
         return lineNumbers;
     };
 
-    // Risk Analysis Only
     const analyzeSolidity = async () => {
         if (!code.trim()) {
             setOutput("Please enter Solidity code to analyze");
