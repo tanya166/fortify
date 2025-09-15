@@ -12,12 +12,12 @@ const SolidityIDE = () => {
     const [deploymentAllowed, setDeploymentAllowed] = useState(false);
     const textareaRef = useRef(null);
     const lineNumbersRef = useRef(null);
-    const getApiUrl = () => {
-        if (process.env.NODE_ENV === 'production') {
-            return process.env.REACT_APP_API_URL || 'https://your-render-app.onrender.com';
-        }
-        return 'http://localhost:3000';
-    };
+ const getApiUrl = () => {
+    if (import.meta.env.PROD) {
+        return import.meta.env.VITE_API_URL || 'https://fortify-qwmj.onrender.com';
+    }
+    return 'http://localhost:3000';
+};
     const updateLineNumbers = () => {
         const lines = code.split('\n').length;
         const lineNumbers = [];

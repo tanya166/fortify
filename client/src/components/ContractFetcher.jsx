@@ -37,12 +37,12 @@ const ContractFetcher = () => {
         setInterpretation("Loading...");
         setAnalysisResult(null);
         setProtectionResult(null);
- const getApiUrl = () => {
-        if (process.env.NODE_ENV === 'production') {
-            return process.env.REACT_APP_API_URL || 'https://fortify-qwmj.onrender.com';
-        }
-        return 'http://localhost:3000';
-    };
+        const getApiUrl = () => {
+    if (import.meta.env.PROD) {
+        return import.meta.env.VITE_API_URL || 'https://fortify-qwmj.onrender.com';
+    }
+    return 'http://localhost:3000';
+};
         try {
             const response = await fetch("await fetch(`${getApiUrl()}/api/risk/check-only", {
                 method: "POST",
